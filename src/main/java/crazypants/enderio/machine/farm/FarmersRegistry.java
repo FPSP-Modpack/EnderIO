@@ -24,7 +24,6 @@ import crazypants.enderio.machine.farm.farmers.PlantableFarmer;
 import crazypants.enderio.machine.farm.farmers.RubberTreeFarmerIC2;
 import crazypants.enderio.machine.farm.farmers.StemFarmer;
 import crazypants.enderio.machine.farm.farmers.TreeFarmer;
-import crazypants.enderio.machine.farm.farmers.ForestryFarmer;
 
 public final class FarmersRegistry {
 
@@ -35,10 +34,13 @@ public final class FarmersRegistry {
     addExtraUtilities();
     addNatura();
     addTiC();
+    addStillHungry();
     addIC2();
+    addMFR();
     addThaumcraft();
     addFlowers();
-    ForestryFarmer.init();
+    addGrowableOres();
+    addImmersiveEngineering();
 
     FarmersCommune.joinCommune(new StemFarmer(Blocks.reeds, new ItemStack(Items.reeds)));
     FarmersCommune.joinCommune(new StemFarmer(Blocks.cactus, new ItemStack(Blocks.cactus)));
@@ -176,11 +178,26 @@ public final class FarmersRegistry {
     }
   }
   
+  private static void addMFR() {
+    String mod = "MineFactoryReloaded";
+    String blockName = "rubberwood.sapling";
+    Block saplingBlock = GameRegistry.findBlock(mod, blockName);
+    if(saplingBlock != null) {
+      FarmersCommune.joinCommune(new TreeFarmer(saplingBlock, GameRegistry.findBlock(mod, "rubberwood.log")));
+    }
+    
+  }
+
   private static void addIC2() {
     RubberTreeFarmerIC2 rtf = new RubberTreeFarmerIC2();
     if(rtf.isValid()) {
       FarmersCommune.joinCommune(rtf);
     }
+  }
+
+  private static void addStillHungry() {
+    String mod = "stillhungry";
+    addPickable(mod, "grapeBlock", "StillHungry_grapeSeed");
   }
 
   private static void addExtraUtilities() {
@@ -201,6 +218,36 @@ public final class FarmersRegistry {
         GameRegistry.findBlock("BiomesOPlenty", "flowers2"), 
         GameRegistry.findBlock("Botany", "flower"), 
         GameRegistry.findBlock("Botania", "flower") ) );
+  }
+
+  @SuppressWarnings("unchecked")
+  private static void addGrowableOres() {
+    String mod = "B0bGrowsOre";
+    if (!Loader.isModLoaded(mod)) {
+      return;
+    }
+    Pattern[] growableOres = { Pattern.compile("(.+)Reed"), Pattern.compile("oreGrowable(.+)") };
+
+    Iterator<Block> blockIter = Block.blockRegistry.iterator();
+    while (blockIter.hasNext()) {
+      Block block = blockIter.next();
+      String name = Block.blockRegistry.getNameForObject(block);
+      if (name != null && name.startsWith(mod)) {
+        for (Pattern blockPattern : growableOres) {
+          if (blockPattern.matcher(name).find()) {
+            FarmersCommune.joinCommune(new StemFarmer(block, new ItemStack(block)));
+          }
+        }
+      }
+    }
+  }
+
+  private static void addImmersiveEngineering() {
+    Block hemp = GameRegistry.findBlock("ImmersiveEngineering", "hemp");
+    Item hempSeed = GameRegistry.findItem("ImmersiveEngineering", "hemp");
+    if (hemp != null && hempSeed != null) {
+      FarmersCommune.joinCommune(new StemFarmer(hemp, new ItemStack(hempSeed)));
+    }
   }
   
   private FarmersRegistry() {
